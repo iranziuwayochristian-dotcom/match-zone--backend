@@ -7,325 +7,224 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
-const API_KEY = process.env.API_KEY;
+const API_KEY = process.env.FOOTBALL_API_KEY;
+
+const API_URL = "https://api.football-data.org/v4";
 
 if (!API_KEY) {
-    console.error("ERROR: API_KEY is not set");
+    console.error("ERROR: FOOTBALL_API_KEY is not set");
 }
-
 
 // ========================================
 // HOME
 // ========================================
 
 app.get("/", (req, res) => {
-
     res.json({
         app: "MatchZone Live",
-        status: "online"
+        status: "online",
+        api: "football-data.org"
     });
-
 });
 
+// ========================================
+// API REQUEST HELPER
+// ========================================
+
+async function footballAPI(endpoint) {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+        method: "GET",
+        headers: {
+            "X-Auth-Token": API_KEY
+        }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error("Football-data.org Error:", data);
+
+        throw new Error(
+            data.message || "Football API request failed"
+        );
+    }
+
+    return data;
+}
 
 // ========================================
 // LIVE MATCHES
 // ========================================
 
 app.get("/live", async (req, res) => {
-
     try {
 
         if (!API_KEY) {
-
             return res.status(500).json({
-                error: "API_KEY is missing"
-            });
-
-        }
-
-
-        const response = await fetch(
-            "https://v3.football.api-sports.io/fixtures?live=all",
-            {
-                method: "GET",
-
-                headers: {
-                    "x-apisports-key": API_KEY
-                }
-            }
-        );
-
-
-        if (!response.ok) {
-
-            const errorText =
-                await response.text();
-
-            console.error(
-                "Football API Error:",
-                errorText
-            );
-
-            return res.status(
-                response.status
-            ).json({
-                error:
-                    "Football API request failed"
+                error: "FOOTBALL_API_KEY is missing"
             });
         }
 
+        const data = await footballAPI("/matches?status=LIVE");
 
-        const data =
-            await response.json();
-
-
-        const matches =
-            (data.response || [])
-                .map(formatMatch);
-
+        const matches = (data.matches || []).map(formatMatch);
 
         res.json(matches);
 
+    } catch (error) {
+
+        console.error("Live Error:", error);
+
+        res.status(500).json({
+            error: "Unable to load live matches",
+            message: error.message
+        });
+    }
+});
+
+// ========================================
+// TODAY'S MATCHES
+// ========================================
+
+app.get("/matches", async (req, res) => {
+    try {
+
+        if (!API_KEY) {
+            return res.status(500).json({
+                error: "FOOTBALL_API_KEY is missing"
+            });
+        }
+
+        const data = await footballAPI("/matches");
+
+        const matches = (data.matches || []).map(formatMatch);
+
+        res.json({
+            count: matches.length,
+            matches: matches
+        });
 
     } catch (error) {
 
-        console.error(
-            "Live Error:",
-            error
-        );
-
+        console.error("Matches Error:", error);
 
         res.status(500).json({
-            error:
-                "Unable to load live matches"
+            error: "Unable to load matches",
+            message: error.message
         });
     }
-
 });
 
-
 // ========================================
-// FIXTURES BY DATE
+// MATCHES BY DATE
+// Example:
+// /fixtures?date=2026-08-19
 // ========================================
 
 app.get("/fixtures", async (req, res) => {
-
     try {
 
         if (!API_KEY) {
-
             return res.status(500).json({
-                error: "API_KEY is missing"
+                error: "FOOTBALL_API_KEY is missing"
             });
-
         }
 
-
-        const date =
-            req.query.date;
-
+        const date = req.query.date;
 
         if (!date) {
-
             return res.status(400).json({
-                error:
-                    "Please provide a date"
+                error: "Please provide a date"
             });
         }
 
-
-        const response = await fetch(
-
-            `https://v3.football.api-sports.io/fixtures?date=${encodeURIComponent(date)}`,
-
-            {
-                method: "GET",
-
-                headers: {
-                    "x-apisports-key": API_KEY
-                }
-            }
-
+        const data = await footballAPI(
+            `/matches?dateFrom=${encodeURIComponent(date)}&dateTo=${encodeURIComponent(date)}`
         );
 
-
-        if (!response.ok) {
-
-            const errorText =
-                await response.text();
-
-            console.error(
-                "Fixtures API Error:",
-                errorText
-            );
-
-            return res.status(
-                response.status
-            ).json({
-                error:
-                    "Football API request failed"
-            });
-        }
-
-
-        const data =
-            await response.json();
-
-
-        const matches =
-            (data.response || [])
-                .map(formatMatch);
-
+        const matches = (data.matches || []).map(formatMatch);
 
         res.json({
-
             date: date,
-
             count: matches.length,
-
             matches: matches
-
         });
-
 
     } catch (error) {
 
-        console.error(
-            "Fixtures Error:",
-            error
-        );
-
+        console.error("Fixtures Error:", error);
 
         res.status(500).json({
-            error:
-                "Unable to load fixtures"
+            error: "Unable to load fixtures",
+            message: error.message
         });
     }
-
 });
 
-
 // ========================================
-// SEARCH TEAMS
-// Example:
-// /search?query=Arsenal
+// COMPETITIONS
 // ========================================
 
-app.get("/search", async (req, res) => {
-
+app.get("/competitions", async (req, res) => {
     try {
 
         if (!API_KEY) {
-
             return res.status(500).json({
-                error: "API_KEY is missing"
-            });
-
-        }
-
-
-        const query =
-            String(
-                req.query.query || ""
-            ).trim();
-
-
-        if (query.length < 3) {
-
-            return res.status(400).json({
-
-                error:
-                    "Search must contain at least 3 characters"
-
+                error: "FOOTBALL_API_KEY is missing"
             });
         }
 
-
-        const response = await fetch(
-
-            `https://v3.football.api-sports.io/teams?search=${encodeURIComponent(query)}`,
-
-            {
-                method: "GET",
-
-                headers: {
-                    "x-apisports-key": API_KEY
-                }
-            }
-
-        );
-
-
-        if (!response.ok) {
-
-            const errorText =
-                await response.text();
-
-            console.error(
-                "Search API Error:",
-                errorText
-            );
-
-            return res.status(
-                response.status
-            ).json({
-                error:
-                    "Football API search failed"
-            });
-        }
-
-
-        const data =
-            await response.json();
-
-
-        const teams =
-            (data.response || [])
-                .map(item => ({
-
-                    id:
-                        item.team?.id,
-
-                    name:
-                        item.team?.name,
-
-                    logo:
-                        item.team?.logo,
-
-                    country:
-                        item.team?.country
-
-                }));
-
+        const data = await footballAPI("/competitions");
 
         res.json({
-
-            query: query,
-
-            count: teams.length,
-
-            teams: teams
-
+            count: (data.competitions || []).length,
+            competitions: data.competitions || []
         });
-
 
     } catch (error) {
 
-        console.error(
-            "Search Error:",
-            error
-        );
-
+        console.error("Competitions Error:", error);
 
         res.status(500).json({
-            error:
-                "Unable to search teams"
+            error: "Unable to load competitions",
+            message: error.message
         });
     }
-
 });
 
+// ========================================
+// LEAGUE TABLE
+// Example:
+// /standings/PL
+// ========================================
+
+app.get("/standings/:competition", async (req, res) => {
+    try {
+
+        if (!API_KEY) {
+            return res.status(500).json({
+                error: "FOOTBALL_API_KEY is missing"
+            });
+        }
+
+        const competition = req.params.competition;
+
+        const data = await footballAPI(
+            `/competitions/${encodeURIComponent(competition)}/standings`
+        );
+
+        res.json(data);
+
+    } catch (error) {
+
+        console.error("Standings Error:", error);
+
+        res.status(500).json({
+            error: "Unable to load standings",
+            message: error.message
+        });
+    }
+});
 
 // ========================================
 // FORMAT MATCH
@@ -334,89 +233,71 @@ app.get("/search", async (req, res) => {
 function formatMatch(match) {
 
     return {
+        id: match.id,
 
-        id:
-            match.fixture?.id,
+        date: match.utcDate,
 
-        date:
-            match.fixture?.date,
+        status: match.status,
 
-        status:
-            match.fixture?.status?.short,
-
-        time:
-            match.fixture?.status?.elapsed,
+        time: match.minute || null,
 
         home: {
-
-            name:
-                match.teams?.home?.name,
-
-            logo:
-                match.teams?.home?.logo
-
+            name: match.homeTeam?.name || "Unknown",
+            logo: match.homeTeam?.crest || null
         },
 
         away: {
-
-            name:
-                match.teams?.away?.name,
-
-            logo:
-                match.teams?.away?.logo
-
+            name: match.awayTeam?.name || "Unknown",
+            logo: match.awayTeam?.crest || null
         },
 
         score: {
+            home: match.score?.fullTime?.home ?? null,
+            away: match.score?.fullTime?.away ?? null
+        },
 
-            home:
-                match.goals?.home,
-
-            away:
-                match.goals?.away
-
+        halfTime: {
+            home: match.score?.halfTime?.home ?? null,
+            away: match.score?.halfTime?.away ?? null
         },
 
         league: {
-
-            name:
-                match.league?.name,
-
-            country:
-                match.league?.country,
-
-            logo:
-                match.league?.logo
-
+            name: match.competition?.name || "Unknown",
+            country: match.area?.name || "Unknown",
+            logo: match.competition?.emblem || null
         }
-
     };
-
 }
+
+// ========================================
+// TEST API
+// ========================================
 
 app.get("/test-api", async (req, res) => {
     try {
-        const response = await fetch(
-            "https://v3.football.api-sports.io/status",
-            {
-                headers: {
-                    "x-apisports-key": API_KEY
-                }
-            }
-        );
 
-        const data = await response.json();
+        if (!API_KEY) {
+            return res.status(500).json({
+                error: "FOOTBALL_API_KEY is missing"
+            });
+        }
+
+        const data = await footballAPI("/competitions");
 
         res.json({
-            httpStatus: response.status,
-            apiResponse: data
+            httpStatus: 200,
+            status: "success",
+            message: "football-data.org API is connected",
+            competitions: data.competitions?.length || 0
         });
 
     } catch (error) {
+
         console.error("Test API Error:", error);
 
         res.status(500).json({
-            error: "Unable to connect to Football API"
+            error: "Unable to connect to football-data.org",
+            message: error.message
         });
     }
 });
@@ -425,14 +306,10 @@ app.get("/test-api", async (req, res) => {
 // START SERVER
 // ========================================
 
-app.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
+app.listen(PORT, "0.0.0.0", () => {
 
-        console.log(
-            `MatchZone Backend running on port ${PORT}`
-        );
+    console.log(
+        `MatchZone Backend running on port ${PORT}`
+    );
 
-    }
-);
+});
