@@ -7,6 +7,16 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
+const API_KEY = process.env.API_KEY;
+
+// Check API key
+if (!API_KEY) {
+    console.error("ERROR: API_KEY is not set");
+}
+
+// =========================
+// HOME
+// =========================
 
 app.get("/", (req, res) => {
     res.json({
@@ -15,13 +25,15 @@ app.get("/", (req, res) => {
     });
 });
 
+// =========================
+// LIVE MATCHES
+// =========================
+
 app.get("/live", async (req, res) => {
 
     try {
 
-        const apiKey = process.env.API_KEY;
-
-        if (!apiKey) {
+        if (!API_KEY) {
             return res.status(500).json({
                 error: "API_KEY is missing"
             });
@@ -30,127 +42,212 @@ app.get("/live", async (req, res) => {
         const response = await fetch(
             "https://v3.football.api-sports.io/fixtures?live=all",
             {
+                method: "GET",
                 headers: {
-                    "x-apisports-key": apiKey
-                }
-            }
-        );
-
-        const data = await response.json();
-
-        const matches = data.response.map(match => ({
-            id: match.fixture.id,
-            league: match.league.name,
-            country: match.league.country,
-
-            home: match.teams.home.name,
-            away: match.teams.away.name,
-
-            homeLogo: match.teams.home.logo,
-            awayLogo: match.teams.away.logo,
-
-            homeScore: match.goals.home ?? 0,
-            awayScore: match.goals.away ?? 0,
-
-            minute: match.fixture.status.elapsed
-                ? `${match.fixture.status.elapsed}'`
-                : "",
-
-            status: match.fixture.status.short
-        }));
-
-        res.json(matches);
-
-    } catch (error) {
-
-        console.error(error);
-
-        res.status(500).json({
-            error: "Server error"
-        });
-    }
-});
-
-});
-
-app.get("/fixtures", async (req, res) => {
-
-    try {
-
-        const apiKey = process.env.API_KEY;
-
-        if (!apiKey) {
-            return res.status(500).json({
-                error: "API_KEY is missing"
-            });
-        }
-
-        const today = new Date()
-            .toISOString()
-            .split("T")[0];
-
-        const response = await fetch(
-            `https://v3.football.api-sports.io/fixtures?date=${today}`,
-            {
-                headers: {
-                    "x-apisports-key": apiKey
+                    "x-apisports-key": API_KEY
                 }
             }
         );
 
         if (!response.ok) {
+
+            const errorText =
+                await response.text();
+
+            console.error(
+                "API Error:",
+                errorText
+            );
+
             return res.status(response.status).json({
                 error: "Football API request failed"
             });
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
-        const matches = (data.response || []).map(match => ({
-            id: match.fixture.id,
+        const matches =
+            (data.response || []).map((match) => ({
 
-            league: match.league.name,
+                id: match.fixture.id,
 
-            country: match.league.country,
+                home: {
+                    name: match.teams.home.name,
+                    logo: match.teams.home.logo
+                },
 
-            home: match.teams.home.name,
+                away: {
+                    name: match.teams.away.name,
+                    logo: match.teams.away.logo
+                },
 
-            away: match.teams.away.name,
+                score: {
+                    home: match.goals.home,
+                    away: match.goals.away
+                },
 
-            homeLogo: match.teams.home.logo,
+                time:
+                    match.fixture.status.elapsed,
 
-            awayLogo: match.teams.away.logo,
+                status:
+                    match.fixture.status.short,
 
-            homeScore: match.goals.home,
+                league: {
+                    name: match.league.name,
+                    country: match.league.country,
+                    logo: match.league.logo
+                }
 
-            awayScore: match.goals.away,
-
-            date: match.fixture.date,
-
-            status: match.fixture.status.short
-        }));
+            }));
 
         res.json(matches);
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Live Matches Error:",
+            error
+        );
 
         res.status(500).json({
-            error: "Server error"
+            error:
+                "Unable to load live matches"
         });
-
     }
 
 });
 
-app.listen(PORT, () => {
-    console.log(
-        `MatchZone backend running on port ${PORT}`
-    );
+// =========================
+// TODAY'S FIXTURES
+// =========================
+
+app.get("/fixtures", async (req, res) => {
+
+    try {
+
+        if (!API_KEY) {
+            return res.status(500).json({
+                error: "API_KEY is missing"
+            });
+        }
+
+        const today =
+            new Date()
+                .toISOString()
+                .split("T")[0];
+
+        const response =
+            await fetch(
+                `https://v3.football.api-sports.io/fixtures?date=${today}`,
+                {
+                    method: "GET",
+
+                    headers: {
+                        "x-apisports-key":
+                            API_KEY
+                    }
+                }
+            );
+
+        if (!response.ok) {
+
+            const errorText =
+                await response.text();
+
+            console.error(
+                "API Error:",
+                errorText
+            );
+
+            return res.status(response.status).json({
+                error:
+                    "Football API request failed"
+            });
+        }
+
+        const data =
+            await response.json();
+
+        const matches =
+            (data.response || [])
+                .map((match) => ({
+
+                    id:
+                        match.fixture.id,
+
+                    home: {
+                        name:
+                            match.teams.home.name,
+
+                        logo:
+                            match.teams.home.logo
+                    },
+
+                    away: {
+                        name:
+                            match.teams.away.name,
+
+                        logo:
+                            match.teams.away.logo
+                    },
+
+                    score: {
+                        home:
+                            match.goals.home,
+
+                        away:
+                            match.goals.away
+                    },
+
+                    date:
+                        match.fixture.date,
+
+                    status:
+                        match.fixture.status.short,
+
+                    league: {
+                        name:
+                            match.league.name,
+
+                        country:
+                            match.league.country,
+
+                        logo:
+                            match.league.logo
+                    }
+
+                }));
+
+        res.json(matches);
+
+    } catch (error) {
+
+        console.error(
+            "Fixtures Error:",
+            error
+        );
+
+        res.status(500).json({
+            error:
+                "Unable to load fixtures"
+        });
+    }
+
 });
-app.listen(PORT, () => {
-    console.log(
-        `MatchZone backend running on port ${PORT}`
-    );
-});
+
+// =========================
+// START SERVER
+// =========================
+
+app.listen(
+    PORT,
+    "0.0.0.0",
+    () => {
+
+        console.log(
+            `MatchZone Backend running on port ${PORT}`
+        );
+
+    }
+);
