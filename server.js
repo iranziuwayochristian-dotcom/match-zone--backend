@@ -394,6 +394,32 @@ function formatMatch(match) {
 
 }
 
+app.get("/test-api", async (req, res) => {
+    try {
+        const response = await fetch(
+            "https://v3.football.api-sports.io/status",
+            {
+                headers: {
+                    "x-apisports-key": API_KEY
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        res.json({
+            httpStatus: response.status,
+            apiResponse: data
+        });
+
+    } catch (error) {
+        console.error("Test API Error:", error);
+
+        res.status(500).json({
+            error: "Unable to connect to Football API"
+        });
+    }
+});
 
 // ========================================
 // START SERVER
