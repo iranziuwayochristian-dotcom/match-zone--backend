@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Match Zone Live</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-ball">⚽</span>
+      <div>
+        <h1>MATCH ZONE</h1>
+        <span>LIVE</span>
+      </div>
+    </div>
+
+    <button class="menu-btn" id="menuBtn">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <nav id="nav">
+      <a href="#home" class="active">
+        <i class="fa-solid fa-house"></i> Home
+      </a>
+
+      <a href="#live">
+        <i class="fa-solid fa-circle"></i> Live
+      </a>
+
+      <a href="#fixtures">
+        <i class="fa-solid fa-calendar"></i> Fixtures
+      </a>
+
+      <a href="#results">
+        <i class="fa-solid fa-trophy"></i> Results
+      </a>
+    </nav>
+  </header>
+
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+
+    <div class="hero-content">
+      <div class="live-badge">
+        <span></span> LIVE FOOTBALL
+      </div>
+
+      <h2>All Matches.<br>
+        <strong>One Zone.</strong>
+      </h2>
+
+      <p>
+        Follow live football scores, fixtures and results
+        from Europe, Saudi Arabia and Rwanda.
+      </p>
+
+      <a href="#live" class="hero-btn">
+        <i class="fa-solid fa-play"></i>
+        View Live Matches
+      </a>
+    </div>
+
+  </section>
+
+
+  <!-- LEAGUES -->
+  <section class="section">
+
+    <div class="section-title">
+      <div>
+        <span class="small-title">EXPLORE</span>
+        <h2>Popular Leagues</h2>
+      </div>
+    </div>
+
+    <div class="league-container">
+
+      <button class="league-card active-league" data-country="all">
+        <span>🌍</span>
+        <strong>All</strong>
+      </button>
+
+      <button class="league-card" data-country="england">
+        <span>🏴</span>
+        <strong>England</strong>
+      </button>
+
+      <button class="league-card" data-country="spain">
+        <span>🇪🇸</span>
+        <strong>Spain</strong>
+      </button>
+
+      <button class="league-card" data-country="italy">
+        <span>🇮🇹</span>
+        <strong>Italy</strong>
+      </button>
+
+      <button class="league-card" data-country="germany">
+        <span>🇩🇪</span>
+        <strong>Germany</strong>
+      </button>
+
+      <button class="league-card" data-country="france">
+        <span>🇫🇷</span>
+        <strong>France</strong>
+      </button>
+
+      <button class="league-card" data-country="saudi">
+        <span>🇸🇦</span>
+        <strong>Saudi Arabia</strong>
+      </button>
+
+      <button class="league-card" data-country="rwanda">
+        <span>🇷🇼</span>
+        <strong>Rwanda</strong>
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- LIVE MATCHES -->
+  <main class="section" id="live">
+
+    <div class="section-title">
+
+      <div>
+        <span class="small-title live-text">
+          <span class="pulse"></span>
+          LIVE NOW
+        </span>
+
+        <h2>Live Matches</h2>
+      </div>
+
+      <button class="refresh-btn" id="refreshBtn">
+        <i class="fa-solid fa-rotate"></i>
+        Refresh
+      </button>
+
+    </div>
+
+
+    <div class="status-bar">
+      <span id="connectionStatus">
+        <i class="fa-solid fa-circle"></i>
+        Connecting...
+      </span>
+
+      <span id="lastUpdate">
+        Last update: --
+      </span>
+    </div>
+
+
+    <div id="matchesContainer" class="matches-container">
+
+      <!-- LOADING -->
+      <div class="loading">
+        <div class="loader"></div>
+        <h3>Loading live matches...</h3>
+        <p>Please wait</p>
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- FIXTURES -->
+  <section class="section" id="fixtures">
+
+    <div class="section-title">
+      <div>
+        <span class="small-title">UPCOMING</span>
+        <h2>Fixtures</h2>
+      </div>
+    </div>
+
+    <div class="empty-box">
+      <i class="fa-solid fa-calendar-days"></i>
+      <h3>Upcoming Matches</h3>
+      <p>Fixtures will appear here.</p>
+    </div>
+
+  </section>
+
+
+  <!-- FOOTER -->
+  <footer>
+
+    <div class="footer-logo">
+      ⚽ MATCH ZONE <span>LIVE</span>
+    </div>
+
+    <p>
+      Your home for live football scores.
+    </p>
+
+    <div class="footer-links">
+      <a href="#home">Home</a>
+      <a href="#live">Live</a>
+      <a href="#fixtures">Fixtures</a>
+      <a href="#results">Results</a>
+    </div>
+
+    <div class="copyright">
+      © 2026 Match Zone Live. All rights reserved.
+    </div>
+
+  </footer>
+
+
+  <script src="script.js"></script>
+
+</body>
+  </html>
