@@ -1,13 +1,26 @@
 {
   "name": "match-zone-backend",
   "version": "1.0.0",
+  "description": "Match Zone Live football scores backend",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
+  "keywords": [
+    "football",
+    "live-score",
+    "api-football",
+    "match-zone"
+  ],
+  "author": "Match Zone Live",
+  "license": "MIT",
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
     "express": "^5.1.0"
-    
-  "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
